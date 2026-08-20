@@ -32,6 +32,11 @@
     font-weight: bold;
   }
 
+  #highscore {
+    font-size: 0.95rem;
+    color: #aaaaaa;
+  }
+
   #game-wrapper {
     position: relative;
   }
@@ -90,6 +95,7 @@
 
   <h1>Snake</h1>
   <div id="score">Punkte: 0</div>
+  <div id="highscore">Highscore: 0</div>
 
   <div id="game-wrapper">
     <canvas id="game" width="400" height="400"></canvas>
@@ -106,6 +112,7 @@
   const canvas = document.getElementById('game');
   const ctx = canvas.getContext('2d');
   const scoreEl = document.getElementById('score');
+  const highscoreEl = document.getElementById('highscore');
   const gameOverEl = document.getElementById('game-over');
   const finalScoreEl = document.getElementById('final-score');
   const restartBtn = document.getElementById('restart-btn');
@@ -113,8 +120,10 @@
   const GRID_SIZE = 20;
   const TILE_COUNT = canvas.width / GRID_SIZE;
   const GAME_SPEED_MS = 120;
+  const HIGHSCORE_KEY = 'snake-highscore';
 
   let snake, direction, nextDirection, food, score, gameLoop, isGameOver;
+  let highscore = Number(localStorage.getItem(HIGHSCORE_KEY)) || 0;
 
   function init() {
     snake = [{ x: 8, y: 10 }];
@@ -124,6 +133,7 @@
     isGameOver = false;
     placeFood();
     updateScore();
+    updateHighscoreDisplay();
     gameOverEl.classList.remove('visible');
 
     if (gameLoop) clearInterval(gameLoop);
@@ -143,6 +153,10 @@
 
   function updateScore() {
     scoreEl.textContent = `Punkte: ${score}`;
+  }
+
+  function updateHighscoreDisplay() {
+    highscoreEl.textContent = `Highscore: ${highscore}`;
   }
 
   function tick() {
@@ -191,7 +205,17 @@
   function endGame() {
     isGameOver = true;
     clearInterval(gameLoop);
-    finalScoreEl.textContent = `Erreichte Punkte: ${score}`;
+
+    const isNewHighscore = score > highscore;
+    if (isNewHighscore) {
+      highscore = score;
+      localStorage.setItem(HIGHSCORE_KEY, String(highscore));
+      updateHighscoreDisplay();
+    }
+
+    finalScoreEl.textContent = isNewHighscore
+      ? `Erreichte Punkte: ${score} — Neuer Highscore!`
+      : `Erreichte Punkte: ${score}`;
     gameOverEl.classList.add('visible');
   }
 

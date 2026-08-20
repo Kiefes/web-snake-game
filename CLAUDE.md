@@ -29,5 +29,6 @@ Everything lives in `index.html`, structured in three inline sections:
   - `direction` vs. `nextDirection`: keydown handlers write to `nextDirection`, which is only applied to `direction` at the start of the next `tick()`. This prevents reversing directly into the snake's own body within a single frame.
   - Collision (wall or self) calls `endGame()`, which stops the interval and shows the game-over overlay with the final score.
   - The "Neu starten" button re-runs `init()` to restart.
+  - The highscore is persisted across sessions in `localStorage` under `HIGHSCORE_KEY` (`'snake-highscore'`), loaded once into the `highscore` variable on script load. `endGame()` compares the final score against it, updates `localStorage` and the `#highscore` display when beaten, and flags the game-over message with "Neuer Highscore!".
 
 When modifying gameplay (speed, grid size, scoring), all relevant constants (`GRID_SIZE`, `TILE_COUNT`, `GAME_SPEED_MS`) are declared together near the top of the `<script>` block.
