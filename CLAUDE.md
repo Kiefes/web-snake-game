@@ -32,3 +32,7 @@ Everything lives in `index.html`, structured in three inline sections:
   - The highscore is persisted across sessions in `localStorage` under `HIGHSCORE_KEY` (`'snake-highscore'`), loaded once into the `highscore` variable on script load. `endGame()` compares the final score against it, updates `localStorage` and the `#highscore` display when beaten, and flags the game-over message with "Neuer Highscore!".
 
 When modifying gameplay (speed, grid size, scoring), all relevant constants (`GRID_SIZE`, `TILE_COUNT`, `GAME_SPEED_MS`) are declared together near the top of the `<script>` block.
+
+## Analytics
+
+`index.html` loads Vercel Speed Insights via a `<script defer src="/_vercel/speed-insights/script.js">` tag (no npm package — kept dependency-free per the project's single-file constraint). That path only resolves on Vercel; expect a harmless 404 for it when serving locally.
