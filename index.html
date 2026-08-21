@@ -42,8 +42,8 @@
   }
 
   canvas {
-    background: #0a1929;
-    border: 4px solid #444466;
+    background: #f1f1f1;
+    border: 4px solid #e63946;
     border-radius: 8px;
     display: block;
   }
@@ -89,6 +89,81 @@
     font-size: 0.9rem;
     color: #aaaaaa;
   }
+
+  #settings-btn {
+    padding: 6px 16px;
+    font-size: 0.9rem;
+    background: #6272a4;
+    color: #f0f0f0;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  #settings-btn:hover {
+    background: #7284b8;
+  }
+
+  #settings-panel {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 10;
+  }
+
+  #settings-panel.visible {
+    display: flex;
+  }
+
+  #settings-panel .panel-content {
+    background: #1e1e2e;
+    padding: 24px 32px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 220px;
+  }
+
+  #settings-panel h2 {
+    margin: 0;
+  }
+
+  #settings-panel label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    font-size: 0.95rem;
+  }
+
+  #settings-panel input[type="color"] {
+    width: 48px;
+    height: 32px;
+    padding: 0;
+    border: none;
+    border-radius: 4px;
+    background: none;
+    cursor: pointer;
+  }
+
+  #settings-close-btn {
+    padding: 8px 20px;
+    font-size: 1rem;
+    background: #6272a4;
+    color: #f0f0f0;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    align-self: flex-end;
+  }
+
+  #settings-close-btn:hover {
+    background: #7284b8;
+  }
 </style>
 </head>
 <body>
@@ -108,6 +183,18 @@
 
   <div id="hint">Steuerung: Pfeiltasten</div>
 
+  <button id="settings-btn">⚙ Einstellungen</button>
+
+  <div id="settings-panel">
+    <div class="panel-content">
+      <h2>Einstellungen</h2>
+      <label>Kopf-Farbe <input type="color" id="head-color"></label>
+      <label>Körper-Farbe <input type="color" id="body-color"></label>
+      <label>Futter-Farbe <input type="color" id="food-color"></label>
+      <button id="settings-close-btn">Schließen</button>
+    </div>
+  </div>
+
 <script>
   const canvas = document.getElementById('game');
   const ctx = canvas.getContext('2d');
@@ -116,14 +203,43 @@
   const gameOverEl = document.getElementById('game-over');
   const finalScoreEl = document.getElementById('final-score');
   const restartBtn = document.getElementById('restart-btn');
+  const settingsBtn = document.getElementById('settings-btn');
+  const settingsPanel = document.getElementById('settings-panel');
+  const settingsCloseBtn = document.getElementById('settings-close-btn');
+  const headColorInput = document.getElementById('head-color');
+  const bodyColorInput = document.getElementById('body-color');
+  const foodColorInput = document.getElementById('food-color');
 
   const GRID_SIZE = 20;
   const TILE_COUNT = canvas.width / GRID_SIZE;
   const GAME_SPEED_MS = 120;
   const HIGHSCORE_KEY = 'snake-highscore';
+  const COLORS_KEY = 'snake-colors';
+  const DEFAULT_COLORS = { head: '#50fa7b', body: '#42c96a', food: '#ff5555' };
+  const PLAYFIELD_BG = '#f1f1f1';
+  const GRID_DOT_COLOR = '#d0d0d0';
 
   let snake, direction, nextDirection, food, score, gameLoop, isGameOver;
   let highscore = Number(localStorage.getItem(HIGHSCORE_KEY)) || 0;
+  let colors = loadColors();
+
+  function loadColors() {
+    try {
+      const stored = JSON.parse(localStorage.getItem(COLORS_KEY));
+      if (stored && stored.head && stored.body && stored.food) return stored;
+    } catch (e) {
+      // ignore malformed stored value, fall back to defaults
+    }
+    return { ...DEFAULT_COLORS };
+  }
+
+  function saveColors() {
+    localStorage.setItem(COLORS_KEY, JSON.stringify(colors));
+  }
+
+  headColorInput.value = colors.head;
+  bodyColorInput.value = colors.body;
+  foodColorInput.value = colors.food;
 
   function init() {
     snake = [{ x: 8, y: 10 }];
@@ -190,14 +306,23 @@
   }
 
   function draw() {
-    ctx.fillStyle = '#0a1929';
+    ctx.fillStyle = PLAYFIELD_BG;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    ctx.fillStyle = '#ff5555';
+    ctx.fillStyle = GRID_DOT_COLOR;
+    for (let x = 0; x < TILE_COUNT; x++) {
+      for (let y = 0; y < TILE_COUNT; y++) {
+        ctx.beginPath();
+        ctx.arc(x * GRID_SIZE + GRID_SIZE / 2, y * GRID_SIZE + GRID_SIZE / 2, 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    ctx.fillStyle = colors.food;
     ctx.fillRect(food.x * GRID_SIZE, food.y * GRID_SIZE, GRID_SIZE - 1, GRID_SIZE - 1);
 
     snake.forEach((segment, index) => {
-      ctx.fillStyle = index === 0 ? '#50fa7b' : '#42c96a';
+      ctx.fillStyle = index === 0 ? colors.head : colors.body;
       ctx.fillRect(segment.x * GRID_SIZE, segment.y * GRID_SIZE, GRID_SIZE - 1, GRID_SIZE - 1);
     });
   }
@@ -237,6 +362,27 @@
   });
 
   restartBtn.addEventListener('click', init);
+
+  settingsBtn.addEventListener('click', () => settingsPanel.classList.add('visible'));
+  settingsCloseBtn.addEventListener('click', () => settingsPanel.classList.remove('visible'));
+
+  headColorInput.addEventListener('input', () => {
+    colors.head = headColorInput.value;
+    saveColors();
+    draw();
+  });
+
+  bodyColorInput.addEventListener('input', () => {
+    colors.body = bodyColorInput.value;
+    saveColors();
+    draw();
+  });
+
+  foodColorInput.addEventListener('input', () => {
+    colors.food = foodColorInput.value;
+    saveColors();
+    draw();
+  });
 
   init();
   draw();

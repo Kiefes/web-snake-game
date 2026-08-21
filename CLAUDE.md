@@ -30,6 +30,8 @@ Everything lives in `index.html`, structured in three inline sections:
   - Collision (wall or self) calls `endGame()`, which stops the interval and shows the game-over overlay with the final score.
   - The "Neu starten" button re-runs `init()` to restart.
   - The highscore is persisted across sessions in `localStorage` under `HIGHSCORE_KEY` (`'snake-highscore'`), loaded once into the `highscore` variable on script load. `endGame()` compares the final score against it, updates `localStorage` and the `#highscore` display when beaten, and flags the game-over message with "Neuer Highscore!".
+  - Snake/food colors are never hardcoded in `draw()` — they read from the `colors` object (`{ head, body, food }`), which loads from `localStorage` under `COLORS_KEY` (`'snake-colors'`, falling back to `DEFAULT_COLORS`) via `loadColors()`. The `#settings-panel` (toggled by `#settings-btn`) exposes three `<input type="color">` fields; each fires `draw()` directly on `input` so a color change is visible immediately, independent of the `tick()` loop, and `saveColors()` persists it.
+  - `draw()` also renders a dot per grid cell (`GRID_DOT_COLOR`) before the food/snake, marking the grid the snake moves on against the light `PLAYFIELD_BG`.
 
 When modifying gameplay (speed, grid size, scoring), all relevant constants (`GRID_SIZE`, `TILE_COUNT`, `GAME_SPEED_MS`) are declared together near the top of the `<script>` block.
 
